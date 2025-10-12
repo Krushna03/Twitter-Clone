@@ -1,0 +1,24 @@
+On frontend:
+Fo setting up the Graphql, some config is required and it is as follows:
+
+1. codegen : It watches the schema & generate the ts for you.
+
+* We need to install graphql-request
+* Then setup the codegen by installing some commands & then the file is created need to make the file work properly by checking the path as it might cause error.
+* Then need to do init to make sure the things are configured to create a file.
+
+Install the @graphql-codegen/client-preset
+Main package for the 
+
+MAIN:
+Error occur when try to run the npm run codegen command
+* Add concurrently 
+& then add this, then it works & update the import after that 
+
+import { graphql } from "graphql"
+
+export const verifyUserGoogleTokenQuery = graphql(`#graphql
+  query VerifyUserGoogleToken($token: String!){
+    verifyGoogleToken(token: $token)
+  }
+`) 
