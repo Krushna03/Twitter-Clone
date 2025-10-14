@@ -4,13 +4,15 @@ import { BiHash, BiHomeCircle, BiImageAlt, BiMoney, BiUser } from "react-icons/b
 import FeedCard from "@/components/FeedCard";
 import { SlOptions } from "react-icons/sl";
 import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import toast from "react-hot-toast";
 import { graphqlClient } from "@/clients/api";
 import { verifyUserGoogleTokenQuery } from "@/graphql/query/user";
 import { useCurrentUser } from "@/hooks/user";
 import { useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
+import { useCreateTweet, useGetAllTweets } from "@/hooks/tweet";
+import { Tweet } from "@/gql/graphql";
 
 interface TwiiterSidebarButton {
   title: string;
@@ -54,8 +56,18 @@ const sidebarMenuItems: TwiiterSidebarButton[] = [
 
 export default function Home() {
 
-  const { user } = useCurrentUser()
   const queryClient = useQueryClient()
+  const { user } = useCurrentUser()
+  const { tweets } = useGetAllTweets()
+  const { mutate } = useCreateTweet()
+  const [content, setContent] = useState("")
+
+  const handleCreateTweet = useCallback(() => {
+    mutate({
+      content
+    })
+    setContent("")
+  }, [content, mutate])
   
   const handleSelectImage = useCallback(() => {
     const input = document.createElement('input');
@@ -75,7 +87,6 @@ export default function Home() {
       const { verifyGoogleToken } = await graphqlClient.request(verifyUserGoogleTokenQuery, {token: googleToken})
 
       toast.success("Verified Success")
-      console.log(verifyGoogleToken);
 
       if (verifyGoogleToken) {
         window.localStorage.setItem("_twitter_token", verifyGoogleToken)
@@ -151,6 +162,8 @@ export default function Home() {
                 </div>
                 <div className="col-span-11">
                   <textarea
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
                     className="w-full bg-transparent text-xl px-3 border-b border-slate-800"
                     placeholder="What's happening..."
                     rows={2}
@@ -158,7 +171,7 @@ export default function Home() {
                   </textarea>
                   <div className="mt-2 flex justify-between itens-center">
                     <BiImageAlt onClick={handleSelectImage} className="text-xl" />
-                    <button className="bg-[#2981bc] text-sm font-semibold py-2 px-5 rounded-full">
+                    <button onClick={handleCreateTweet} className="bg-[#2981bc] text-sm font-semibold py-2 px-5 rounded-full">
                       Tweet
                     </button>
                   </div>
@@ -166,13 +179,15 @@ export default function Home() {
               </div>
             </div>
           </div>
-        <FeedCard />
-        <FeedCard />
-        <FeedCard />
-        <FeedCard />
-        <FeedCard />
-        <FeedCard />
-        <FeedCard />
+
+        {
+          tweets?.map((tweet) => 
+            <FeedCard
+              key={tweet?.id}
+              data={tweet as Tweet}
+            />
+          )
+        }
       </div>
 
       <div className="col-span-3">

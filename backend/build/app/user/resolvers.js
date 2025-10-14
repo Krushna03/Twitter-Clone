@@ -55,4 +55,9 @@ const queries = {
         return user;
     })
 };
-exports.resolver = { queries };
+const extraResolvers = {
+    User: {
+        tweets: (parent) => __awaiter(void 0, void 0, void 0, function* () { return db_1.prismaClient.tweet.findMany({ where: { author: { id: parent.id } } }); })
+    }
+};
+exports.resolver = { queries, extraResolvers };
