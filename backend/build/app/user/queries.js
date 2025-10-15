@@ -4,4 +4,6 @@ exports.queries = void 0;
 exports.queries = `#GraphQL
   verifyGoogleToken(token: String!): String!
   getCurrentUser: User
+
+  getUserById(id: ID!): User
 `;

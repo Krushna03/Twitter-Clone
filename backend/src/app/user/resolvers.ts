@@ -50,6 +50,14 @@ const queries = {
 
     const user = await prismaClient.user.findUnique({ where: { id }})
     return user;
+  },
+
+  getUserById: async (parent: any, { id }: { id: string }, ctx: GraphqlContext) => {
+    if (!id) throw new Error("UserId not found");
+
+    const user = await prismaClient.user.findUnique({ where: { id } })
+    
+    return user;
   }
 }
 
