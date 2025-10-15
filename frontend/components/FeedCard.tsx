@@ -16,46 +16,43 @@ const FeedCard: React.FC<FeedCardProps> = (props) => {
   const { data } = props;
   
   return (
-    <div className='border border-r-0 border-l-0 border-b-0 p-5 border-gray-600 hover:bg-[#171717] transition-all cursor-pointer'>
-      <div className='grid grid-cols-12 gap-3'>
-        <div className='col-span-1'>
-          {
-            data.author?.profileImage && (
-              <Image 
-                src={data.author.profileImage}
-                alt="User image" 
-                height={90} 
-                width={90} 
-                className='rounded-full'
-              />
-            )
-          }
+    <div className="border border-r-0 border-l-0 border-b-0 p-3 sm:p-5 border-gray-600 hover:bg-[#171717] transition-all cursor-pointer">
+      <div className="grid grid-cols-12 gap-2 sm:gap-3">
+        
+        {/* User Profile */}
+        <div className="col-span-2 sm:col-span-1 flex justify-center sm:justify-start">
+          {data.author?.profileImage && (
+            <Image
+              src={data.author.profileImage}
+              alt="User image"
+              height={40}
+              width={40}
+              className="rounded-full h-6 w-6 sm:h-8 sm:w-8"
+            />
+          )}
         </div>
 
-        <div className='col-span-11'>
-          <h1>{data.author?.firstName} {data.author?.lastname}</h1>
-          <p>
-            {data.content} 
+        {/* Tweet Content */}
+        <div className="col-span-10 sm:col-span-11">
+          <h1 className="font-semibold text-sm sm:text-base text-gray-100">
+            {data.author?.firstName} {data.author?.lastname}
+          </h1>
+
+          <p className="text-sm sm:text-lg mt-1 break-words text-gray-200">
+            {data.content}
           </p>
 
-          <div className='flex justify-between mt-5 text-xl items-center w-[90%]'>
-            <div>
-              <BiMessageRounded />
-            </div>
-            <div>
-              <FaRetweet />
-            </div>
-            <div>
-              <AiOutlineHeart />
-            </div>
-            <div>
-              <BiUpload />
-            </div>
+          {/* Action Icons */}
+          <div className="flex justify-between mt-4 sm:mt-5 text-base sm:text-xl items-center w-full sm:w-[90%] text-gray-500">
+            <BiMessageRounded className="hover:text-[#2981bc] cursor-pointer transition" />
+            <FaRetweet className="hover:text-green-500 cursor-pointer transition" />
+            <AiOutlineHeart className="hover:text-red-500 cursor-pointer transition" />
+            <BiUpload className="hover:text-[#2981bc] cursor-pointer transition" />
           </div>
         </div>
-
       </div>
     </div>
+
   )
 }
 
