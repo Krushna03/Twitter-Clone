@@ -11,8 +11,34 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.resolver = void 0;
 const db_1 = require("../../client/db");
+const client_s3_1 = require("@aws-sdk/client-s3");
+const s3_request_presigner_1 = require("@aws-sdk/s3-request-presigner");
+const accessKeyId = process.env.AWS_S3_ACCESS_KEY || "";
+const secretAccessKey = process.env.AWS_S3_ACCESS_SECRET || "";
+const s3ClientConfig = {
+    region: "ap-south-1",
+    credentials: {
+        accessKeyId: accessKeyId,
+        secretAccessKey: secretAccessKey
+    }
+};
+const s3Client = new client_s3_1.S3Client(s3ClientConfig);
 const queries = {
-    getAllTweets: () => db_1.prismaClient.tweet.findMany({ orderBy: { createdAt: "desc" } })
+    getAllTweets: () => db_1.prismaClient.tweet.findMany({ orderBy: { createdAt: "desc" } }),
+    getSignedURLForTweet: (parent_1, _a, ctx_1) => __awaiter(void 0, [parent_1, _a, ctx_1], void 0, function* (parent, { imageType, imageName }, ctx) {
+        if (!ctx.user || !ctx.user.id)
+            throw new Error("Unauthorized");
+        const allowedImageTypes = ["image/jpeg", "image/jpg", "image/png", 'image/webp'];
+        if (!allowedImageTypes.includes(imageType))
+            throw new Error("Unsupported Image Type");
+        const putObjectCommand = new client_s3_1.PutObjectCommand({
+            Bucket: "krushna-twitter-dev",
+            Key: `uploads/${ctx.user.id}/tweets/${imageName}-${new Date()}.${imageType}`
+        });
+        const signedURL = yield (0, s3_request_presigner_1.getSignedUrl)(s3Client, putObjectCommand);
+        console.log("signed", signedURL);
+        return signedURL;
+    })
 };
 const mutations = {
     createTweet: (parent_1, _a, ctx_1) => __awaiter(void 0, [parent_1, _a, ctx_1], void 0, function* (parent, { payload }, ctx) {

@@ -7,6 +7,10 @@ import Image from "next/image";
 import { useCreateTweet } from "@/hooks/tweet";
 import { Tweet } from "@/gql/graphql";
 import TwitterLayout from "@/components/Layout/TwitterLayout";
+import { graphqlClient } from "@/clients/api";
+import { getSignedURLForTweetQuery } from "@/graphql/query/tweet";
+import toast from "react-hot-toast";
+import axios from "axios";
 
 interface HomeProps {
   tweets: Tweet[];
@@ -16,17 +20,57 @@ const HomeClient: React.FC<HomeProps> = ({ tweets }) => {
   const { user } = useCurrentUser();
   const { mutate } = useCreateTweet();
   const [content, setContent] = useState("");
+  const [imageURL, setImageURL] = useState("")
 
   const handleCreateTweet = useCallback(() => {
     if (!content.trim()) return;
-    mutate({ content });
+    mutate({ content, imageURL });
     setContent("");
-  }, [content, mutate]);
+  }, [content, imageURL, mutate]);
+
+
+  const handleInputChangeFIle = useCallback((input: HTMLInputElement) => {
+    return async (event: Event) => {
+      event.preventDefault();
+      
+      const file: File | null | undefined = input.files?.item(0)
+
+      if (!file) return;
+
+      const { getSignedURLForTweet } = await graphqlClient.request(getSignedURLForTweetQuery, { 
+        imageName: file.name,
+        imageType: file.type
+      })
+
+      if (getSignedURLForTweet) {
+        toast.loading('Uploading....', { id: "2" })
+        
+        try {
+          await axios.put(getSignedURLForTweet, file, {
+            headers: {
+              'Content-Type': file.type
+            }
+          })
+        } catch (error) {
+          console.error("error: ", error);
+        }
+        toast.success('Upload Completed', { id: "2" })
+
+        const url = new URL(getSignedURLForTweet);
+        const myFilePath = `${url.origin}${url.pathname}`
+        setImageURL(myFilePath)
+      }
+    }
+  }, [])
+
 
   const handleSelectImage = useCallback(() => {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*";
+
+    input.addEventListener('change', handleInputChangeFIle(input))
+
     input.click();
   }, []);
 
@@ -55,6 +99,17 @@ const HomeClient: React.FC<HomeProps> = ({ tweets }) => {
               placeholder="What's happening?"
               rows={2}
             />
+
+            {
+              imageURL && (
+                <Image
+                  src={imageURL}
+                  alt="image-url"
+                  height={300}
+                  width={300}
+                />
+              )
+            }
 
             <div className="mt-2 flex justify-between items-center">
               <BiImageAlt

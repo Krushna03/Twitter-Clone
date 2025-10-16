@@ -22,3 +22,69 @@ export const verifyUserGoogleTokenQuery = graphql(`#graphql
     verifyGoogleToken(token: $token)
   }
 `) 
+
+
+
+S3 Bucket creation:
+create user : using IAM user scetion
+give permission : using attach policy directly
+Give full access : Amazons3FullAccess
+Create access credentials : from security scetion
+Select the access type : Application running outside AWS 
+Save the crentials in ENV
+
+S3 creation
+Then create the s3 bucket by searching over there.
+create bucket by filling details.
+disable the "Block public access" 
+go to permission
+1. disable the block all permission
+2. add the json based permission
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "PublicReadGetObject",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": [
+                "s3:GetObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::your-bucket-name/*"
+            ]
+        }
+    ]
+}
+Here we are allow anybody to access the object, see the photos only using this arn arn:aws:s3:::your-bucket-name/*".
+
+Then setup the cors policy to get access by providing the frontend domain 
+[
+    {
+        "AllowedHeaders": [
+            "*"
+        ],
+        "AllowedMethods": [
+            "GET",
+            "PUT",
+            "POST",
+            "DELETE",
+            "HEAD"
+        ],
+        "AllowedOrigins": [
+            "http://your-website.com",
+            "https://your-secure-website.com"
+        ],
+        "ExposeHeaders": [],
+        "MaxAgeSeconds": 3000
+    }
+]
+
+FLOW:
+1. client make request for upload to backend,
+2. backend generate pre-signed url to send to the frontend
+3. The frontend collect the url & using this url it will send the image to the s3 bucket. 
+
+Package for this:
+    "@aws-sdk/client-s3": "^3.911.0",
+    "@aws-sdk/s3-request-presigner": "^3.911.0",

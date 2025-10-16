@@ -45,6 +45,17 @@ const FeedCard: React.FC<FeedCardProps> = (props) => {
             {data.content}
           </p>
 
+          {
+            data?.imageUrl && (
+              <Image
+                src={data.imageUrl}
+                alt="image"
+                height={400}
+                width={400}
+              />
+            )
+          }
+          
           {/* Action Icons */}
           <div className="flex justify-between mt-4 sm:mt-5 text-base sm:text-xl items-center w-full sm:w-[90%] text-gray-500">
             <BiMessageRounded className="hover:text-[#2981bc] cursor-pointer transition" />
