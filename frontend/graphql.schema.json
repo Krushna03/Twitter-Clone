@@ -322,7 +322,7 @@
             "deprecationReason": null
           },
           {
-            "name": "imageUrl",
+            "name": "imageURL",
             "description": null,
             "args": [],
             "type": {

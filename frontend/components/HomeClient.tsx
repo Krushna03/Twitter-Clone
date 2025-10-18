@@ -29,48 +29,47 @@ const HomeClient: React.FC<HomeProps> = ({ tweets }) => {
   }, [content, imageURL, mutate]);
 
 
-  const handleInputChangeFIle = useCallback((input: HTMLInputElement) => {
-    return async (event: Event) => {
-      event.preventDefault();
-      
-      const file: File | null | undefined = input.files?.item(0)
-
-      if (!file) return;
-
-      const { getSignedURLForTweet } = await graphqlClient.request(getSignedURLForTweetQuery, { 
-        imageName: file.name,
-        imageType: file.type
-      })
-
-      if (getSignedURLForTweet) {
-        toast.loading('Uploading....', { id: "2" })
-        
-        try {
-          await axios.put(getSignedURLForTweet, file, {
-            headers: {
-              'Content-Type': file.type
-            }
-          })
-        } catch (error) {
-          console.error("error: ", error);
-        }
-        toast.success('Upload Completed', { id: "2" })
-
-        const url = new URL(getSignedURLForTweet);
-        const myFilePath = `${url.origin}${url.pathname}`
-        setImageURL(myFilePath)
-      }
-    }
-  }, [])
-
-
   const handleSelectImage = useCallback(() => {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*";
 
-    input.addEventListener('change', handleInputChangeFIle(input))
+    const handleChange = async (event: Event) => {
+      event.preventDefault();
+      
+      const file: File | null | undefined = input.files?.item(0);
 
+      if (!file) return;
+
+      try {
+        const { getSignedURLForTweet } = await graphqlClient.request(getSignedURLForTweetQuery, { 
+            imageName: file.name,
+            imageType: file.type
+          }
+        );
+
+        if (getSignedURLForTweet) {
+          toast.loading('Uploading....', { id: "2" });
+          
+          await axios.put(getSignedURLForTweet, file, {
+            headers: {
+              'Content-Type': file.type,
+            }
+          });
+          
+          toast.success('Upload Completed', { id: "2" });
+
+          const url = new URL(getSignedURLForTweet);
+          const myFilePath = `${url.origin}${url.pathname}`;
+          setImageURL(myFilePath);
+        }
+      } catch (error) {
+        console.error("error: ", error);
+        toast.error('Upload failed', { id: "2" });
+      }
+    };
+
+    input.addEventListener('change', handleChange);
     input.click();
   }, []);
 

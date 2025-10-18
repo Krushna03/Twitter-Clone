@@ -32,13 +32,16 @@ const queries = {
     
     if (!allowedImageTypes.includes(imageType)) throw new Error("Unsupported Image Type")
       
+    const extension = imageType.split("/")[1];
+    const key = `uploads/${ctx.user.id}/tweets/${imageName}-${Date.now()}.${extension}`;
+    
     const putObjectCommand = new PutObjectCommand({
       Bucket: "krushna-twitter-dev",
-      Key: `uploads/${ctx.user.id}/tweets/${imageName}-${new Date()}.${imageType}`
+      Key: key,
+      ContentType: imageType,
     })
 
     const signedURL = await getSignedUrl(s3Client, putObjectCommand)
-    console.log("signed", signedURL);
     
     return signedURL;
   }

@@ -31,12 +31,14 @@ const queries = {
         const allowedImageTypes = ["image/jpeg", "image/jpg", "image/png", 'image/webp'];
         if (!allowedImageTypes.includes(imageType))
             throw new Error("Unsupported Image Type");
+        const extension = imageType.split("/")[1];
+        const key = `uploads/${ctx.user.id}/tweets/${imageName}-${Date.now()}.${extension}`;
         const putObjectCommand = new client_s3_1.PutObjectCommand({
             Bucket: "krushna-twitter-dev",
-            Key: `uploads/${ctx.user.id}/tweets/${imageName}-${new Date()}.${imageType}`
+            Key: key,
+            ContentType: imageType,
         });
         const signedURL = yield (0, s3_request_presigner_1.getSignedUrl)(s3Client, putObjectCommand);
-        console.log("signed", signedURL);
         return signedURL;
     })
 };
