@@ -8,15 +8,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.resolver = void 0;
-const db_1 = require("../../client/db");
 const client_s3_1 = require("@aws-sdk/client-s3");
 const s3_request_presigner_1 = require("@aws-sdk/s3-request-presigner");
+const user_1 = __importDefault(require("../../services/user"));
+const tweet_1 = __importDefault(require("../../services/tweet"));
 const accessKeyId = process.env.AWS_S3_ACCESS_KEY || "";
 const secretAccessKey = process.env.AWS_S3_ACCESS_SECRET || "";
+const defaultRegion = process.env.AWS_DEFAULT_REGION || "";
+const awsS3Bucket = process.env.AWS_S3_BUCKET || "";
 const s3ClientConfig = {
-    region: "ap-south-1",
+    region: defaultRegion,
     credentials: {
         accessKeyId: accessKeyId,
         secretAccessKey: secretAccessKey
@@ -24,7 +30,7 @@ const s3ClientConfig = {
 };
 const s3Client = new client_s3_1.S3Client(s3ClientConfig);
 const queries = {
-    getAllTweets: () => db_1.prismaClient.tweet.findMany({ orderBy: { createdAt: "desc" } }),
+    getAllTweets: () => tweet_1.default.getAllTweets(),
     getSignedURLForTweet: (parent_1, _a, ctx_1) => __awaiter(void 0, [parent_1, _a, ctx_1], void 0, function* (parent, { imageType, imageName }, ctx) {
         if (!ctx.user || !ctx.user.id)
             throw new Error("Unauthorized");
@@ -34,7 +40,7 @@ const queries = {
         const extension = imageType.split("/")[1];
         const key = `uploads/${ctx.user.id}/tweets/${imageName}-${Date.now()}.${extension}`;
         const putObjectCommand = new client_s3_1.PutObjectCommand({
-            Bucket: "krushna-twitter-dev",
+            Bucket: awsS3Bucket,
             Key: key,
             ContentType: imageType,
         });
@@ -47,19 +53,13 @@ const mutations = {
         if (!ctx.user) {
             throw new Error("You are not authorized");
         }
-        const tweet = yield db_1.prismaClient.tweet.create({
-            data: {
-                content: payload.content,
-                imageURL: payload.imageURL,
-                author: { connect: { id: ctx.user.id } }
-            }
-        });
+        const tweet = yield tweet_1.default.createTweet(Object.assign(Object.assign({}, payload), { userId: ctx.user.id }));
         return tweet;
     })
 };
 const extraResolvers = {
     Tweet: {
-        author: (parent) => db_1.prismaClient.user.findUnique({ where: { id: parent.authorId } })
+        author: (parent) => user_1.default.getUserById(parent.authorId)
     }
 };
 exports.resolver = { mutations, extraResolvers, queries };
