@@ -1,11 +1,12 @@
-import { graphqlClient } from "@/clients/api";
 import FeedCard from "@/components/FeedCard";
+import { graphqlClient } from "@/clients/api";
 import TwitterLayout from "@/components/Layout/TwitterLayout";
 import { Tweet, User } from "@/gql/graphql";
 import { getUserByIdQuery } from "@/graphql/query/user";
 import Image from "next/image";
 import { BsArrowLeftShort } from "react-icons/bs";
 import Link from "next/link";
+import FollowButton from "@/components/FollowButton";
 
 interface PageProps {
   params: { id: string };
@@ -16,6 +17,8 @@ const UserPage = async ({ params }: PageProps) => {
 
   const userInfo = await graphqlClient.request(getUserByIdQuery, { id });
   const user = userInfo?.getUserById as User | null;
+
+  // const { user : currentUser } = useCurrentUser() 
 
   if (!user) {
     return (
@@ -40,7 +43,7 @@ const UserPage = async ({ params }: PageProps) => {
           </div>
         </nav>
 
-        <div className="p-4 border-b border-slate-800">
+        <div className="p-4 px-6 border-b border-slate-800">
           {user.profileImage && (
             <Image
               src={user.profileImage}
@@ -53,6 +56,15 @@ const UserPage = async ({ params }: PageProps) => {
           <h1 className="text-xl font-bold mt-2">
             {user.firstName} {user.lastname}
           </h1>
+          <div className="flex items-center justify-between">
+            <div className="flex gap-3 text-sm text-gray-500 mt-2">
+              <span>{user.followers?.length} followers</span>
+              <span>{user.following?.length} following</span>
+            </div>
+            <div className="mt-2">
+              <FollowButton user={user} />
+            </div>
+          </div>
         </div>
 
         <div>

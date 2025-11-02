@@ -8,7 +8,7 @@ const HomePage = async () => {
   const { getAllTweets } = await graphqlClient.request(getAllTweetsQuery);
   const tweets = getAllTweets as Tweet[];
 
-  return <HomeClient tweets={tweets} />;
+  return <HomeClient props={tweets} />;
 };
 
 export default HomePage;

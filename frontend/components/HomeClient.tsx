@@ -4,7 +4,7 @@ import FeedCard from "@/components/FeedCard";
 import { useCallback, useState } from "react";
 import { useCurrentUser } from "@/hooks/user";
 import Image from "next/image";
-import { useCreateTweet } from "@/hooks/tweet";
+import { useCreateTweet, useGetAllTweets } from "@/hooks/tweet";
 import { Tweet } from "@/gql/graphql";
 import TwitterLayout from "@/components/Layout/TwitterLayout";
 import { graphqlClient } from "@/clients/api";
@@ -13,20 +13,22 @@ import toast from "react-hot-toast";
 import axios from "axios";
 
 interface HomeProps {
-  tweets: Tweet[];
+  props: Tweet[];
 }
 
-const HomeClient: React.FC<HomeProps> = ({ tweets }) => {
+const HomeClient: React.FC<HomeProps> = ({ props }) => {
   const { user } = useCurrentUser();
-  const { mutate } = useCreateTweet();
+  const { mutateAsync } = useCreateTweet();
+  const { tweets = props as Tweet[] } = useGetAllTweets()
   const [content, setContent] = useState("");
   const [imageURL, setImageURL] = useState("")
 
   const handleCreateTweet = useCallback(() => {
     if (!content.trim()) return;
-    mutate({ content, imageURL });
+    mutateAsync({ content, imageURL });
     setContent("");
-  }, [content, imageURL, mutate]);
+    setImageURL("")
+  }, [content, imageURL, mutateAsync]);
 
 
   const handleSelectImage = useCallback(() => {
