@@ -10,20 +10,36 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_1 = require("../client/db");
+const redis_1 = require("../client/redis/redis");
 class TweetService {
     static createTweet(data) {
         return __awaiter(this, void 0, void 0, function* () {
-            return db_1.prismaClient.tweet.create({
+            const rateLimit = yield redis_1.redisClient.get(`RATE_LIMIT:${data.userId}`);
+            if (rateLimit) {
+                throw new Error("Rate limit exceeded");
+            }
+            const tweet = yield db_1.prismaClient.tweet.create({
                 data: {
                     content: data.content,
                     imageURL: data.imageURL,
                     author: { connect: { id: data.userId } }
                 }
             });
+            yield redis_1.redisClient.setex(`RATE_LIMIT:${data.userId}`, 20, "1");
+            yield redis_1.redisClient.del("allTweets");
+            return tweet;
         });
     }
     static getAllTweets() {
-        return db_1.prismaClient.tweet.findMany({ orderBy: { createdAt: "desc" } });
+        return __awaiter(this, void 0, void 0, function* () {
+            const cachedTweets = yield redis_1.redisClient.get("allTweets");
+            if (cachedTweets) {
+                return JSON.parse(cachedTweets);
+            }
+            const tweets = yield db_1.prismaClient.tweet.findMany({ orderBy: { createdAt: "desc" } });
+            yield redis_1.redisClient.set("allTweets", JSON.stringify(tweets));
+            return tweets;
+        });
     }
 }
 exports.default = TweetService;

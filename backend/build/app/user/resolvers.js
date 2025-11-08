@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.resolver = void 0;
 const db_1 = require("../../client/db");
 const user_1 = __importDefault(require("../../services/user"));
+const redis_1 = require("../../client/redis/redis");
 const queries = {
     verifyGoogleToken: (parent_1, _a) => __awaiter(void 0, [parent_1, _a], void 0, function* (parent, { token }) {
         const userToken = yield user_1.default.verifyGoogleAuthToken(token);
@@ -41,7 +42,7 @@ const extraResolvers = {
         tweets: (parent) => db_1.prismaClient.tweet.findMany({ where: { author: { id: parent.id } } }),
         followers: (parent) => __awaiter(void 0, void 0, void 0, function* () {
             const result = yield db_1.prismaClient.follows.findMany({
-                where: { follower: { id: parent.id } },
+                where: { following: { id: parent.id } },
                 include: {
                     follower: true,
                 }
@@ -56,6 +57,37 @@ const extraResolvers = {
                 }
             });
             return result.map(el => el.following);
+        }),
+        recommendedUsers: (parent, _, ctx) => __awaiter(void 0, void 0, void 0, function* () {
+            if (!ctx.user)
+                return [];
+            console.log("Before finding users");
+            const cachedUsers = yield redis_1.redisClient.get(`recommendedUsers:${ctx.user.id}`);
+            if (cachedUsers) {
+                return JSON.parse(cachedUsers);
+            }
+            const myFollowing = yield db_1.prismaClient.follows.findMany({
+                where: {
+                    follower: { id: ctx.user.id }
+                },
+                include: {
+                    following: {
+                        include: { followers: { include: { following: true } } }
+                    }
+                }
+            });
+            const user = [];
+            for (const followings of myFollowing) {
+                for (const followingOfFollowedUser of followings.following.followers) {
+                    if (followingOfFollowedUser.following.id !== ctx.user.id &&
+                        myFollowing.findIndex((e) => (e === null || e === void 0 ? void 0 : e.followingId) === followingOfFollowedUser.following.id) < 0) {
+                        user.push(followingOfFollowedUser.following);
+                    }
+                }
+            }
+            console.log("After finding users");
+            yield redis_1.redisClient.set(`recommendedUsers:${ctx.user.id}`, JSON.stringify(user));
+            return user;
         })
     }
 };
@@ -65,6 +97,7 @@ const mutations = {
         if (!ctx || !((_b = ctx.user) === null || _b === void 0 ? void 0 : _b.id))
             throw new Error("Un-authenticated");
         yield user_1.default.followUser(ctx.user.id, to);
+        yield redis_1.redisClient.del(`recommendedUsers:${ctx.user.id}`);
         return true;
     }),
     unfollowUser: (parent_1, _a, ctx_1) => __awaiter(void 0, [parent_1, _a, ctx_1], void 0, function* (parent, { to }, ctx) {
@@ -72,6 +105,7 @@ const mutations = {
         if (!ctx || !((_b = ctx.user) === null || _b === void 0 ? void 0 : _b.id))
             throw new Error("Un-authenticated");
         yield user_1.default.unfollowUser(ctx.user.id, to);
+        yield redis_1.redisClient.del(`recommendedUsers:${ctx.user.id}`);
         return true;
     })
 };

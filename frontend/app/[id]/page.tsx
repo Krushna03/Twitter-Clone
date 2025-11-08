@@ -13,12 +13,10 @@ interface PageProps {
 }
 
 const UserPage = async ({ params }: PageProps) => {
-  const id = params.id;
+  const id = (await params).id;
 
   const userInfo = await graphqlClient.request(getUserByIdQuery, { id });
   const user = userInfo?.getUserById as User | null;
-
-  // const { user : currentUser } = useCurrentUser() 
 
   if (!user) {
     return (

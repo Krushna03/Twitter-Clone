@@ -22,7 +22,10 @@ const s3ClientConfig: S3ClientConfig = {
 const s3Client = new S3Client(s3ClientConfig)
 
 const queries = {
-  getAllTweets: () => TweetService.getAllTweets(),
+  getAllTweets:  () => {
+    const tweets = TweetService.getAllTweets();
+    return tweets;
+  },
   
   getSignedURLForTweet: async (parent: any, { imageType, imageName }: { imageName: string, imageType: string }, ctx: GraphqlContext) => {
     if (!ctx.user || !ctx.user.id) throw new Error("Unauthorized")

@@ -10,6 +10,8 @@ exports.types = `#graphql
     email: String!
     profileImage: String
 
+    recommendedUsers: [User]
+    
     followers: [User]
     following: [User]
 

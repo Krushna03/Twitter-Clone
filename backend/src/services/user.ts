@@ -45,7 +45,20 @@ class UserService {
     return prismaClient.user.findUnique({ where: { id }})
   }
 
-  public static followUser(from: string, to: string) {
+  public static async followUser(from: string, to: string) {
+    const existingFollow = await prismaClient.follows.findUnique({
+      where: {
+        followerId_followingId: {
+          followerId: from,
+          followingId: to
+        }
+      }
+    });
+
+    if (existingFollow) {
+      return existingFollow;
+    }
+
     return prismaClient.follows.create({
       data: {
         follower: { connect: { id: from } },

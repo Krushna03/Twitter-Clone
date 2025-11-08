@@ -52,11 +52,24 @@ class UserService {
         });
     }
     static followUser(from, to) {
-        return db_1.prismaClient.follows.create({
-            data: {
-                follower: { connect: { id: from } },
-                following: { connect: { id: to } }
+        return __awaiter(this, void 0, void 0, function* () {
+            const existingFollow = yield db_1.prismaClient.follows.findUnique({
+                where: {
+                    followerId_followingId: {
+                        followerId: from,
+                        followingId: to
+                    }
+                }
+            });
+            if (existingFollow) {
+                return existingFollow;
             }
+            return db_1.prismaClient.follows.create({
+                data: {
+                    follower: { connect: { id: from } },
+                    following: { connect: { id: to } }
+                }
+            });
         });
     }
     static unfollowUser(from, to) {

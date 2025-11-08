@@ -149,9 +149,46 @@ const TwitterLayout: React.FC<TwitterLayoutProps> = (props) => {
         </div>
 
         {/* Right Section */}
-        <div className="hidden sm:block sm:col-span-3 lg:col-span-3">
-          {!user && <GoogleLogin onSuccess={handleLoginWithGoogle} />}
+        <div className="hidden sm:block sm:col-span-3 lg:col-span-3 m-4">
+          {!user ? (
+            <div className='px-3'>
+              <h1 className='my-2 text-xl'>New to Twitter?</h1>
+              <GoogleLogin onSuccess={handleLoginWithGoogle} />
+            </div>
+          ) : (
+            <div className='px-4 py-3 bg-slate-900 rounded-lg'>    
+              <h1 className='my-2 text-xl'>User you may know</h1>
+              {
+                user?.recommendedUsers?.map((el) => (
+                  <div className='flex items-center gap-3 mt-5' key={el?.id}>
+                    {
+                      el?.profileImage && (
+                        <Image
+                          src={el?.profileImage}
+                          alt="user-logo"
+                          width={50}
+                          height={50}
+                          className='rounded-full'
+                        />
+                      )
+                    }
+
+                    <div>
+                      <div className="text-base">
+                        {el?.firstName} {el?.lastname}
+                      </div>
+                      <Link href={`/${el?.id}`} className="bg-white text-black text-xs sm:text-sm font-semibold py-1 px-3 sm:py-1 sm:px-5 rounded-lg hover:opacity-90 transition cursor-pointer w-full">
+                        View
+                      </Link>
+                    </div>
+                  </div>
+                ))
+              }      
+            </div>
+            ) 
+          }
         </div>
+
       </div>
     </div>
 
