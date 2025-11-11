@@ -16,6 +16,10 @@ export async function initServer() {
   }))
   app.use(bodyParser.json())
 
+  app.get("/", (req, res) => 
+    res.status(200).json({ message: "Everything is perfect" })
+  )
+
   const graphqlServer = new ApolloServer<GraphqlContext>({
     typeDefs: `
       ${User.types}
