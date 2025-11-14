@@ -3,7 +3,7 @@ import { redisClient } from "../client/redis/redis";
 
 export interface CreateTweetData {
   content: string;
-  imageURL: string;
+  imageURL?: string;
   userId: string;
 }
 
@@ -18,7 +18,7 @@ class TweetService {
     const tweet = await prismaClient.tweet.create({
       data: {
         content: data.content,
-        imageURL: data.imageURL,
+        ...(data.imageURL && { imageURL: data.imageURL }),
         author: { connect: { id: data.userId } }
       }
     })

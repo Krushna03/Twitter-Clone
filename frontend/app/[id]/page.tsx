@@ -9,11 +9,11 @@ import Link from "next/link";
 import FollowButton from "@/components/FollowButton";
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 const UserPage = async ({ params }: PageProps) => {
-  const id = (await params).id;
+  const { id } = await params;
 
   const userInfo = await graphqlClient.request(getUserByIdQuery, { id });
   const user = userInfo?.getUserById as User | null;
